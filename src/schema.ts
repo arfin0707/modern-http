@@ -1,6 +1,16 @@
 import {z} from "zod";
 import { notesSchema } from "./notes";
 
+export const getPaginatedNoteSchema =z.object({
+    limit:z.number().int().min(1).max(500).optional().default(10),
+    page:z.number().int().optional(),
+    id:z.number().int().optional()
+
+    
+
+})
+
+
 
 export const getSingleNoteSchema = z
 .string()

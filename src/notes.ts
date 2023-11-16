@@ -1,5 +1,5 @@
 import { bigint, mysqlTable, text, timestamp } from "drizzle-orm/mysql-core";
-import { eq } from "drizzle-orm";
+import { eq, gt } from "drizzle-orm";
 import { migrate } from "drizzle-orm/mysql2/migrator";
 
 import { db } from "./db";
@@ -34,8 +34,40 @@ export async function createNote(note: Partial<Note>): Promise<Note> {
   )[0];
 }
 
-export async function getAll() {
-  return await db.select().from(notesSchema).limit(10);
+// export async function getAll() {
+//   return await db.select().from(notesSchema).limit(100);
+
+// }
+
+export async function getPaginated(
+  input: {
+  limit:number,
+  page:number,
+  } | {
+    id:number,
+    limit:number,
+    } 
+  ){
+    let result: Note[]=[];
+
+    if("page" in input && input.page>0){
+      result =await db
+      .select()
+      .from(notesSchema)
+      .limit(input.limit)
+      .offset((input.page - 1) * input.limit);
+    }else if ("id" in input){
+
+      result =await db
+      .select()
+      .from(notesSchema)
+      .where(gt(notesSchema.id, input.id))
+      .limit(input.limit)
+    }
+
+
+  console.log({result})
+  return result;
 }
 
 export async function deleteNote(id: number) {
@@ -45,6 +77,12 @@ export async function deleteNote(id: number) {
 export async function getNote(id: number): Promise<Note | undefined> {
   return (
     await db.select().from(notesSchema).where(eq(notesSchema.id, id)).limit(1)
+  )[0];
+}
+
+export async function getNoteByText(text: string): Promise<Note | undefined> {
+  return (
+    await db.select().from(notesSchema).where(eq(notesSchema.text, text)).limit(1)
   )[0];
 }
 
