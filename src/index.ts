@@ -39,15 +39,26 @@ app.use(
 app.post("/", async (c) => {
  
   const data = await c.req.json();
-  const note =await getNoteByText(data.text);
+  const validation = createNoteRequestSchema.safeParse(data);
+
+if(!validation.success){
+  c.status(400)
+  return c.json({
+    success:false,
+    message:JSON.parse(validation.error.message)[0]
+  })
+}
+
+  const note =await getNoteByText(validation.data.text);
 
   if (note) {
+    c.status(400)
     return c.json({ message: "already exists" });
   }
 
   const newNote: Partial<Note> = {
-    text: data.text || data.text,
-    date: new Date(data.date || Date.now()),
+    text: data.text,
+    date: new Date(data.date),
   };
 
   const dbNote = await createNote(newNote);
